@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>客户管理系统 - 登录</title>
+    <!-- Tailwind CSS v3 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1e40af',
+                        secondary: '#3b82f6',
+                        success: '#10b981',
+                        warning: '#f59e0b',
+                        danger: '#ef4444',
+                        light: '#f3f4f6',
+                        dark: '#1f2937'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .bg-gradient-primary {
+                background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .transition-all-300 {
+                transition: all 0.3s ease;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-md">
+        <!-- Logo and Title -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-primary text-white text-2xl mb-4">
+                <i class="fa fa-users"></i>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-800 text-shadow">客户管理系统</h1>
+            <p class="text-gray-600 mt-2">适合美国华人餐厅/实体商家服务行业</p>
+        </div>
+        
+        <!-- Login Form -->
+        <div class="bg-white rounded-lg shadow-lg p-8">
+            <div class="mb-6">
+                <label for="username" class="block text-gray-700 text-sm font-bold mb-2">用户名</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fa fa-user text-gray-400"></i>
+                    </div>
+                    <input id="username" type="text" class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="请输入用户名" required>
+                </div>
+            </div>
+            
+            <div class="mb-6">
+                <label for="password" class="block text-gray-700 text-sm font-bold mb-2">密码</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fa fa-lock text-gray-400"></i>
+                    </div>
+                    <input id="password" type="password" class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="请输入密码" required>
+                </div>
+            </div>
+            
+            <div class="mb-6">
+                <label for="role" class="block text-gray-700 text-sm font-bold mb-2">角色</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fa fa-id-card text-gray-400"></i>
+                    </div>
+                    <select id="role" class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" required>
+                        <option value="">请选择角色</option>
+                        <option value="admin">老板/管理员</option>
+                        <option value="sales">销售</option>
+                        <option value="operation">运营</option>
+                        <option value="design">设计</option>
+                        <option value="finance">财务</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center">
+                    <input id="remember" type="checkbox" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                    <label for="remember" class="ml-2 block text-sm text-gray-700">记住我</label>
+                </div>
+                <a href="#" class="text-sm text-primary hover:text-secondary transition-all-300">忘记密码?</a>
+            </div>
+            
+            <button id="login-btn" class="w-full bg-gradient-primary text-white font-bold py-3 px-4 rounded-md hover:opacity-90 transition-all-300 flex items-center justify-center">
+                <i class="fa fa-sign-in mr-2"></i> 登录系统
+            </button>
+            
+            <div class="mt-6 text-center text-sm text-gray-600">
+                <p>演示账号：</p>
+                <p class="mt-1">管理员: admin / 123456</p>
+                <p>销售: sales / 123456</p>
+                <p>运营: operation / 123456</p>
+                <p>设计: design / 123456</p>
+                <p>财务: finance / 123456</p>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="text-center mt-6 text-gray-600 text-sm">
+            <p>© 2026 客户管理系统 - 适合 T24 行业</p>
+        </div>
+    </div>
+
+    <script>
+        // 模拟用户数据
+        const users = [
+            { username: 'admin', password: '123456', role: 'admin', name: '管理员' },
+            { username: 'sales', password: '123456', role: 'sales', name: '销售专员' },
+            { username: 'operation', password: '123456', role: 'operation', name: '运营专员' },
+            { username: 'design', password: '123456', role: 'design', name: '设计师' },
+            { username: 'finance', password: '123456', role: 'finance', name: '财务专员' }
+        ];
+
+        // 登录功能
+        document.getElementById('login-btn').addEventListener('click', function() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const role = document.getElementById('role').value;
+            const remember = document.getElementById('remember').checked;
+            
+            // 验证输入
+            if (!username || !password || !role) {
+                alert('请填写完整登录信息');
+                return;
+            }
+            
+            // 验证用户
+            const user = users.find(u => u.username === username && u.password === password && u.role === role);
+            
+            if (user) {
+                // 保存登录状态
+                const loginData = {
+                    userId: username,
+                    name: user.name,
+                    role: user.role,
+                    loginTime: new Date().toISOString()
+                };
+                
+                if (remember) {
+                    localStorage.setItem('userLogin', JSON.stringify(loginData));
+                } else {
+                    sessionStorage.setItem('userLogin', JSON.stringify(loginData));
+                }
+                
+                // 跳转到仪表盘
+                window.location.href = 'dashboard.html';
+            } else {
+                alert('用户名、密码或角色选择错误');
+            }
+        });
+
+        // 检查是否已登录
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedLogin = localStorage.getItem('userLogin') || sessionStorage.getItem('userLogin');
+            
+            if (savedLogin) {
+                try {
+                    const userData = JSON.parse(savedLogin);
+                    if (userData.userId && userData.role) {
+                        window.location.href = 'dashboard.html';
+                    }
+                } catch (e) {
+                    console.error('登录信息解析错误', e);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
