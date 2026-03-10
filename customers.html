@@ -260,13 +260,8 @@
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">行业类型</label>
-                            <select class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                            <select id="industry-filter-select" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
                                 <option value="">全部行业</option>
-                                <option value="restaurant">餐厅</option>
-                                <option value="nail">美甲</option>
-                                <option value="massage">按摩</option>
-                                <option value="beauty">美容</option>
-                                <option value="supermarket">超市</option>
                             </select>
                         </div>
                         
@@ -426,17 +421,17 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">商家名称 <span class="text-red-500">*</span></label>
-                            <input type="text" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" required>
+                            <input id="new-customer-business" type="text" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" required>
                         </div>
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">联系人 <span class="text-red-500">*</span></label>
-                            <input type="text" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" required>
+                            <input id="new-customer-contact" type="text" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" required>
                         </div>
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">联系电话 <span class="text-red-500">*</span></label>
-                            <input type="tel" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" required>
+                            <input id="new-customer-phone" type="tel" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" required>
                         </div>
                         
                         <div>
@@ -451,14 +446,8 @@
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">行业类型 <span class="text-red-500">*</span></label>
-                            <select class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" required>
+                            <select id="new-customer-industry" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" required>
                                 <option value="">请选择行业</option>
-                                <option value="restaurant">餐厅</option>
-                                <option value="nail">美甲</option>
-                                <option value="massage">按摩</option>
-                                <option value="beauty">美容</option>
-                                <option value="supermarket">超市</option>
-                                <option value="other">其他</option>
                             </select>
                         </div>
                         
@@ -610,7 +599,8 @@
                 document.getElementById('user-name').textContent = userData.name;
                 document.getElementById('user-initial').textContent = userData.name.charAt(0);
                 
-                // 加载客户数据
+                // 加载行业配置和客户数据
+                renderIndustryOptions();
                 loadCustomers();
                 
             } catch (e) {
@@ -620,6 +610,60 @@
         });
         
         // 模拟客户数据
+        const INDUSTRY_CONFIG_KEY = 'cmsIndustryConfig';
+        const defaultIndustryConfig = {
+            label: '本地生活服务',
+            industries: [
+                { value: 'restaurant', label: '餐厅' },
+                { value: 'nail', label: '美甲' },
+                { value: 'massage', label: '按摩' },
+                { value: 'beauty', label: '美容' },
+                { value: 'supermarket', label: '超市' },
+                { value: 'other', label: '其他' }
+            ]
+        };
+
+        function getIndustryConfig() {
+            try {
+                const savedConfig = localStorage.getItem(INDUSTRY_CONFIG_KEY);
+                if (!savedConfig) return defaultIndustryConfig;
+                const parsed = JSON.parse(savedConfig);
+                if (!Array.isArray(parsed.industries) || parsed.industries.length === 0) return defaultIndustryConfig;
+                return parsed;
+            } catch (error) {
+                console.warn('行业配置读取失败，使用默认配置', error);
+                return defaultIndustryConfig;
+            }
+        }
+
+        function getIndustryMap(config) {
+            return config.industries.reduce((map, industry) => {
+                map[industry.value] = industry.label;
+                return map;
+            }, {});
+        }
+
+        function renderIndustryOptions() {
+            const config = getIndustryConfig();
+            const filterSelect = document.getElementById('industry-filter-select');
+            const addSelect = document.getElementById('new-customer-industry');
+
+            filterSelect.innerHTML = '<option value="">全部行业</option>';
+            addSelect.innerHTML = '<option value="">请选择行业</option>';
+
+            config.industries.forEach((industry) => {
+                const filterOption = document.createElement('option');
+                filterOption.value = industry.value;
+                filterOption.textContent = industry.label;
+                filterSelect.appendChild(filterOption);
+
+                const addOption = document.createElement('option');
+                addOption.value = industry.value;
+                addOption.textContent = industry.label;
+                addSelect.appendChild(addOption);
+            });
+        }
+
         const mockCustomers = [
             {
                 id: '1',
@@ -748,18 +792,10 @@
             const tableBody = document.getElementById('customer-table-body');
             tableBody.innerHTML = '';
             
+            const industryMap = getIndustryMap(getIndustryConfig());
+
             mockCustomers.forEach(customer => {
                 const row = document.createElement('tr');
-                
-                // 行业类型映射
-                const industryMap = {
-                    'restaurant': '餐厅',
-                    'nail': '美甲',
-                    'massage': '按摩',
-                    'beauty': '美容',
-                    'supermarket': '超市',
-                    'other': '其他'
-                };
                 
                 // 等级映射
                 const levelMap = {
@@ -892,17 +928,34 @@
         // 添加客户表单提交
         document.getElementById('add-customer-form').addEventListener('submit', function(event) {
             event.preventDefault();
-            
-            // 这里可以添加表单验证和数据处理逻辑
-            
-            // 显示成功消息
+
+            const businessName = document.getElementById('new-customer-business').value.trim();
+            const contactPerson = document.getElementById('new-customer-contact').value.trim();
+            const phone = document.getElementById('new-customer-phone').value.trim();
+            const industry = document.getElementById('new-customer-industry').value;
+
+            const nextId = String(mockCustomers.length + 1);
+            const nextNumber = `C2026${String(mockCustomers.length + 1).padStart(4, '0')}`;
+
+            mockCustomers.unshift({
+                id: nextId,
+                customerNumber: nextNumber,
+                businessName,
+                contactPerson,
+                phone,
+                industry,
+                salesPerson: document.getElementById('user-name').textContent || '当前用户',
+                level: 'normal',
+                status: 'following',
+                createdAt: new Date().toISOString().slice(0, 10)
+            });
+
+            loadCustomers();
             alert('客户添加成功！');
-            
-            // 关闭模态框
+
             document.getElementById('add-customer-modal').classList.add('hidden');
-            
-            // 重置表单
             this.reset();
+            renderIndustryOptions();
         });
         
         // 全选/取消全选
