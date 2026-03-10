@@ -75,6 +75,7 @@
             }
         }
     </style>
+    <script src="app-config.js"></script>
 </head>
 <body class="bg-gray-100 min-h-screen">
     <div class="flex h-screen overflow-hidden">
@@ -442,17 +443,17 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">客户名称 <span class="text-red-500">*</span></label>
-                            <input type="text" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" required>
+                            <input id="new-lead-customer" type="text" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" required>
                         </div>
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">联系人 <span class="text-red-500">*</span></label>
-                            <input type="text" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" required>
+                            <input id="new-lead-contact" type="text" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" required>
                         </div>
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">联系电话 <span class="text-red-500">*</span></label>
-                            <input type="tel" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" required>
+                            <input id="new-lead-phone" type="tel" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" required>
                         </div>
                         
                         <div>
@@ -485,7 +486,7 @@
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">跟进阶段</label>
-                            <select class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                            <select id="new-lead-stage" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
                                 <option value="new">新线索</option>
                                 <option value="contact">已联系</option>
                                 <option value="communicate">沟通中</option>
@@ -500,7 +501,7 @@
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">成交概率 (%)</label>
-                            <input type="number" min="0" max="100" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                            <input id="new-lead-probability" type="number" min="0" max="100" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
                         </div>
                         
                         <div>
@@ -564,6 +565,8 @@
                 document.getElementById('user-name').textContent = userData.name;
                 document.getElementById('user-initial').textContent = userData.name.charAt(0);
                 
+                CMSConfig.ensureDemoData();
+                mockSalesLeads = CMSConfig.getLeads();
                 // 加载销售线索数据
                 loadSalesLeads();
                 
@@ -574,118 +577,11 @@
         });
         
         // 模拟销售线索数据
-        const mockSalesLeads = [
-            {
-                id: '1',
-                customerName: '金龙餐厅',
-                contactPerson: '张老板',
-                phone: '+1 (212) 555-1234',
-                salesPerson: '张三',
-                stage: 'new',
-                probability: 30,
-                lastFollowup: '2026-03-01',
-                nextFollowup: '2026-03-08'
-            },
-            {
-                id: '2',
-                customerName: '美丽人生美甲',
-                contactPerson: '王女士',
-                phone: '+1 (310) 555-9012',
-                salesPerson: '李四',
-                stage: 'contact',
-                probability: 40,
-                lastFollowup: '2026-03-02',
-                nextFollowup: '2026-03-09'
-            },
-            {
-                id: '3',
-                customerName: '东方按摩SPA',
-                contactPerson: '赵总',
-                phone: '+1 (415) 555-3456',
-                salesPerson: '张三',
-                stage: 'communicate',
-                probability: 60,
-                lastFollowup: '2026-03-03',
-                nextFollowup: '2026-03-10'
-            },
-            {
-                id: '4',
-                customerName: '时尚美容沙龙',
-                contactPerson: '刘小姐',
-                phone: '+1 (312) 555-7890',
-                salesPerson: '王五',
-                stage: 'quote',
-                probability: 70,
-                lastFollowup: '2026-03-04',
-                nextFollowup: '2026-03-11'
-            },
-            {
-                id: '5',
-                customerName: '亚洲超市',
-                contactPerson: '陈老板',
-                phone: '+1 (718) 555-2345',
-                salesPerson: '李四',
-                stage: 'consider',
-                probability: 50,
-                lastFollowup: '2026-03-05',
-                nextFollowup: '2026-03-12'
-            },
-            {
-                id: '6',
-                customerName: '金色年华KTV',
-                contactPerson: '黄总',
-                phone: '+1 (626) 555-1234',
-                salesPerson: '张三',
-                stage: 'pending',
-                probability: 80,
-                lastFollowup: '2026-03-06',
-                nextFollowup: '2026-03-13'
-            },
-            {
-                id: '7',
-                customerName: '健康生活瑜伽馆',
-                contactPerson: '周教练',
-                phone: '+1 (408) 555-5678',
-                salesPerson: '王五',
-                stage: 'closed',
-                probability: 100,
-                lastFollowup: '2026-03-07',
-                nextFollowup: null
-            },
-            {
-                id: '8',
-                customerName: '米兰西餐厅',
-                contactPerson: '吴老板',
-                phone: '+1 (202) 555-9012',
-                salesPerson: '李四',
-                stage: 'lost',
-                probability: 0,
-                lastFollowup: '2026-03-01',
-                nextFollowup: null
-            },
-            {
-                id: '9',
-                customerName: '北京烤鸭',
-                contactPerson: '郑总',
-                phone: '+1 (703) 555-3456',
-                salesPerson: '张三',
-                stage: 'followup',
-                probability: 20,
-                lastFollowup: '2026-02-28',
-                nextFollowup: '2026-04-01'
-            },
-            {
-                id: '10',
-                customerName: '上海小笼包',
-                contactPerson: '孙老板',
-                phone: '+1 (510) 555-7890',
-                salesPerson: '王五',
-                stage: 'new',
-                probability: 10,
-                lastFollowup: null,
-                nextFollowup: '2026-03-15'
-            }
-        ];
+        let mockSalesLeads = CMSConfig.getLeads();
+        if (!mockSalesLeads.length) {
+            CMSConfig.ensureDemoData();
+            mockSalesLeads = CMSConfig.getLeads();
+        }
         
         // 加载销售线索数据
         function loadSalesLeads() {
@@ -832,15 +728,29 @@
         document.getElementById('add-lead-form').addEventListener('submit', function(event) {
             event.preventDefault();
             
-            // 这里可以添加表单验证和数据处理逻辑
-            
-            // 显示成功消息
+            const customerName = document.getElementById('new-lead-customer').value.trim();
+            const contactPerson = document.getElementById('new-lead-contact').value.trim();
+            const phone = document.getElementById('new-lead-phone').value.trim();
+            const stage = document.getElementById('new-lead-stage').value;
+            const probability = Number(document.getElementById('new-lead-probability').value || 30);
+
+            mockSalesLeads.unshift({
+                id: String(mockSalesLeads.length + 1),
+                customerName,
+                contactPerson,
+                phone,
+                salesPerson: document.getElementById('user-name').textContent || '当前用户',
+                stage,
+                probability,
+                lastFollowup: new Date().toISOString().slice(0, 10),
+                nextFollowup: null
+            });
+
+            CMSConfig.setLeads(mockSalesLeads);
+            loadSalesLeads();
             alert('线索添加成功！');
-            
-            // 关闭模态框
+
             document.getElementById('add-lead-modal').classList.add('hidden');
-            
-            // 重置表单
             this.reset();
         });
         

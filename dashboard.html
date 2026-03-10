@@ -47,6 +47,7 @@
             }
         }
     </style>
+    <script src="app-config.js"></script>
 </head>
 <body class="bg-gray-100 min-h-screen">
     <div class="flex h-screen overflow-hidden">
@@ -125,7 +126,7 @@
                         <button id="sidebar-toggle" class="text-gray-500 focus:outline-none md:hidden">
                             <i class="fa fa-bars text-xl"></i>
                         </button>
-                        <h2 class="ml-2 text-xl font-semibold text-gray-800">仪表盘</h2>
+                        <div class="ml-2"><h2 class="text-xl font-semibold text-gray-800">仪表盘</h2><p id="dashboard-industry-label" class="text-xs text-gray-500"></p></div>
                     </div>
                     
                     <div class="flex items-center">
@@ -400,6 +401,10 @@
                 document.getElementById('user-name').textContent = userData.name;
                 document.getElementById('welcome-name').textContent = userData.name;
                 document.getElementById('user-initial').textContent = userData.name.charAt(0);
+                const profile = CMSConfig.getActiveProfile();
+                CMSConfig.ensureDemoData();
+                const dashboardLabel = document.getElementById('dashboard-industry-label');
+                if (dashboardLabel) dashboardLabel.textContent = `${profile.label} 行业看板`;
                 
                 // 根据角色调整导航菜单
                 adjustNavigationByRole(userData.role);
@@ -524,6 +529,13 @@
             document.getElementById('new-customers').textContent = dashboardData.newCustomers;
             document.getElementById('total-revenue').textContent = dashboardData.totalRevenue;
             document.getElementById('renewal-rate').textContent = dashboardData.renewalRate;
+
+            // 基于当前行业重置后的模块数据刷新关键指标
+            const customersCount = CMSConfig.getCustomers().length;
+            const leadsCount = CMSConfig.getLeads().length;
+            const deliveriesCount = CMSConfig.getDeliveries().length;
+            if (customersCount) document.getElementById('total-customers').textContent = customersCount;
+            if (leadsCount) document.getElementById('new-customers').textContent = leadsCount;
             
             // 初始化图表
             initRevenueChart();
