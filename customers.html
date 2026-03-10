@@ -583,6 +583,45 @@
         </div>
     </div>
 
+    <!-- Customer Detail/Edit Modal -->
+    <div id="customer-detail-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl">
+            <div class="flex items-center justify-between p-6 border-b">
+                <h3 id="customer-detail-title" class="text-lg font-semibold text-gray-800">客户详情</h3>
+                <button id="close-detail-modal-btn" class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                    <i class="fa fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <form id="customer-detail-form">
+                    <input type="hidden" id="detail-customer-id">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">商家名称</label>
+                            <input id="detail-business-name" class="w-full border border-gray-300 rounded-md px-3 py-2" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">联系人</label>
+                            <input id="detail-contact-person" class="w-full border border-gray-300 rounded-md px-3 py-2" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">联系电话</label>
+                            <input id="detail-phone" class="w-full border border-gray-300 rounded-md px-3 py-2" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">行业类型</label>
+                            <select id="detail-industry" class="w-full border border-gray-300 rounded-md px-3 py-2"></select>
+                        </div>
+                    </div>
+                    <div class="mt-6 flex justify-end space-x-3">
+                        <button type="button" id="cancel-detail-modal" class="bg-white border border-gray-300 text-gray-700 font-medium py-2 px-4 rounded-md">关闭</button>
+                        <button type="submit" id="save-detail-btn" class="bg-primary hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md">保存修改</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script>
         // 检查登录状态
         document.addEventListener('DOMContentLoaded', function() {
@@ -712,9 +751,9 @@
                         ${customer.createdAt}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <a href="#" class="text-primary hover:text-secondary mr-3">查看</a>
-                        <a href="#" class="text-gray-600 hover:text-gray-900 mr-3">编辑</a>
-                        <a href="#" class="text-red-600 hover:text-red-900">删除</a>
+                        <button data-action="view" data-id="${customer.id}" class="text-primary hover:text-secondary mr-3">查看</button>
+                        <button data-action="edit" data-id="${customer.id}" class="text-gray-600 hover:text-gray-900 mr-3">编辑</button>
+                        <button data-action="delete" data-id="${customer.id}" class="text-red-600 hover:text-red-900">删除</button>
                     </td>
                 `;
                 
@@ -831,6 +870,91 @@
             });
         });
         
+
+        function openCustomerDetailModal(customerId, mode) {
+            const customer = mockCustomers.find((item) => item.id === customerId);
+            if (!customer) return;
+            const config = getIndustryConfig();
+            const select = document.getElementById('detail-industry');
+            select.innerHTML = '';
+            (config.industries || []).forEach((industry) => {
+                const option = document.createElement('option');
+                option.value = industry.value;
+                option.textContent = industry.label;
+                select.appendChild(option);
+            });
+
+            document.getElementById('detail-customer-id').value = customer.id;
+            document.getElementById('detail-business-name').value = customer.businessName;
+            document.getElementById('detail-contact-person').value = customer.contactPerson;
+            document.getElementById('detail-phone').value = customer.phone;
+            document.getElementById('detail-industry').value = customer.industry;
+
+            const readonly = mode === 'view';
+            document.getElementById('customer-detail-title').textContent = readonly ? '客户详情' : '编辑客户';
+            ['detail-business-name', 'detail-contact-person', 'detail-phone', 'detail-industry'].forEach((id) => {
+                document.getElementById(id).disabled = readonly;
+            });
+            document.getElementById('save-detail-btn').classList.toggle('hidden', readonly);
+            document.getElementById('customer-detail-modal').classList.remove('hidden');
+        }
+
+        function closeCustomerDetailModal() {
+            document.getElementById('customer-detail-modal').classList.add('hidden');
+        }
+
+        document.getElementById('customer-table-body').addEventListener('click', function(event) {
+            const actionButton = event.target.closest('button[data-action]');
+            if (!actionButton) return;
+
+            const customerId = actionButton.dataset.id;
+            const action = actionButton.dataset.action;
+
+            if (action === 'view') {
+                openCustomerDetailModal(customerId, 'view');
+                return;
+            }
+            if (action === 'edit') {
+                openCustomerDetailModal(customerId, 'edit');
+                return;
+            }
+            if (action === 'delete') {
+                const target = mockCustomers.find((item) => item.id === customerId);
+                if (!target) return;
+                if (!confirm(`确定删除客户「${target.businessName}」吗？`)) return;
+                mockCustomers = mockCustomers.filter((item) => item.id !== customerId);
+                CMSConfig.setCustomers(mockCustomers);
+                loadCustomers();
+                alert('客户已删除。');
+            }
+        });
+
+        document.getElementById('close-detail-modal-btn').addEventListener('click', closeCustomerDetailModal);
+        document.getElementById('cancel-detail-modal').addEventListener('click', closeCustomerDetailModal);
+        document.getElementById('customer-detail-modal').addEventListener('click', function(event) {
+            if (event.target === this) closeCustomerDetailModal();
+        });
+
+        document.getElementById('customer-detail-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const customerId = document.getElementById('detail-customer-id').value;
+            const index = mockCustomers.findIndex((item) => item.id === customerId);
+            if (index === -1) return;
+
+            mockCustomers[index] = {
+                ...mockCustomers[index],
+                businessName: document.getElementById('detail-business-name').value.trim(),
+                contactPerson: document.getElementById('detail-contact-person').value.trim(),
+                phone: document.getElementById('detail-phone').value.trim(),
+                industry: document.getElementById('detail-industry').value
+            };
+
+            CMSConfig.setCustomers(mockCustomers);
+            loadCustomers();
+            closeCustomerDetailModal();
+            alert('客户信息已更新。');
+        });
+
         // 退出登录
         document.getElementById('logout-btn').addEventListener('click', function(e) {
             e.preventDefault();
