@@ -3,6 +3,7 @@
   const CUSTOMERS_KEY = 'cmsDemoCustomers';
   const LEADS_KEY = 'cmsDemoLeads';
   const DELIVERIES_KEY = 'cmsDemoDeliveries';
+  const FINANCE_KEY = 'cmsDemoFinanceRecords';
 
   const templates = {
     'local-service': {
@@ -89,17 +90,35 @@
     }));
   }
 
+  function createSeedFinance(profile) {
+    const tpl = templates[profile.key] || templates['local-service'];
+    const statuses = ['unpaid', 'partial', 'paid', 'overdue'];
+    return tpl.customers.slice(0,4).map((name, i) => ({
+      id: `F2026${String(i+1).padStart(3,'0')}`,
+      customer: name,
+      amount: [5800, 4200, 7600, 3600][i % 4],
+      received: [0, 2000, 7600, 0][i % 4],
+      status: statuses[i % 4],
+      method: ['银行转账', '信用卡', '支票', '银行转账'][i % 4],
+      dueDate: `2026-03-${String(10 + i * 5).padStart(2,'0')}`,
+      invoiceType: ['服务费', '项目费', '续费', '广告费'][i % 4]
+    }));
+  }
+
   function ensureDemoData() {
     const profile = getActiveProfile();
     if (!safeParse(localStorage.getItem(CUSTOMERS_KEY), null)) localStorage.setItem(CUSTOMERS_KEY, JSON.stringify(createSeedCustomers(profile)));
     if (!safeParse(localStorage.getItem(LEADS_KEY), null)) localStorage.setItem(LEADS_KEY, JSON.stringify(createSeedLeads(profile)));
     if (!safeParse(localStorage.getItem(DELIVERIES_KEY), null)) localStorage.setItem(DELIVERIES_KEY, JSON.stringify(createSeedDeliveries(profile)));
+    localStorage.setItem(FINANCE_KEY, JSON.stringify(createSeedFinance(profile)));
+    if (!safeParse(localStorage.getItem(FINANCE_KEY), null)) localStorage.setItem(FINANCE_KEY, JSON.stringify(createSeedFinance(profile)));
   }
 
   function resetAllDemoData(profile) {
     localStorage.setItem(CUSTOMERS_KEY, JSON.stringify(createSeedCustomers(profile)));
     localStorage.setItem(LEADS_KEY, JSON.stringify(createSeedLeads(profile)));
     localStorage.setItem(DELIVERIES_KEY, JSON.stringify(createSeedDeliveries(profile)));
+    localStorage.setItem(FINANCE_KEY, JSON.stringify(createSeedFinance(profile)));
   }
 
   window.CMSConfig = {
@@ -114,6 +133,8 @@
     getLeads: () => safeParse(localStorage.getItem(LEADS_KEY), []),
     setLeads: (rows) => localStorage.setItem(LEADS_KEY, JSON.stringify(rows)),
     getDeliveries: () => safeParse(localStorage.getItem(DELIVERIES_KEY), []),
-    setDeliveries: (rows) => localStorage.setItem(DELIVERIES_KEY, JSON.stringify(rows))
+    setDeliveries: (rows) => localStorage.setItem(DELIVERIES_KEY, JSON.stringify(rows)),
+    getFinanceRecords: () => safeParse(localStorage.getItem(FINANCE_KEY), []),
+    setFinanceRecords: (rows) => localStorage.setItem(FINANCE_KEY, JSON.stringify(rows))
   };
 })();
