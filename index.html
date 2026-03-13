@@ -41,6 +41,7 @@
             }
         }
     </style>
+    <script src="app-config.js"></script>
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
     <div class="w-full max-w-md">
@@ -50,7 +51,7 @@
                 <i class="fa fa-users"></i>
             </div>
             <h1 class="text-3xl font-bold text-gray-800 text-shadow">客户管理系统</h1>
-            <p class="text-gray-600 mt-2">适合美国华人餐厅/实体商家服务行业</p>
+            <p id="industry-subtitle" class="text-gray-600 mt-2">适合本地服务行业</p>
         </div>
         
         <!-- Login Form -->
@@ -116,7 +117,7 @@
         
         <!-- Footer -->
         <div class="text-center mt-6 text-gray-600 text-sm">
-            <p>© 2026 客户管理系统 - 适合 T24 行业</p>
+            <p id="industry-footer">© 2026 客户管理系统</p>
         </div>
     </div>
 
@@ -129,6 +130,14 @@
             { username: 'design', password: '123456', role: 'design', name: '设计师' },
             { username: 'finance', password: '123456', role: 'finance', name: '财务专员' }
         ];
+
+
+        CMSConfig.ensureDemoData();
+        const activeProfile = CMSConfig.getActiveProfile();
+        const subtitleEl = document.getElementById('industry-subtitle');
+        const footerEl = document.getElementById('industry-footer');
+        if (subtitleEl) subtitleEl.textContent = activeProfile.loginSubtitle || `适合${activeProfile.label}行业`;
+        if (footerEl) footerEl.textContent = `© 2026 客户管理系统 - ${activeProfile.label}解决方案`;
 
         // 登录功能
         document.getElementById('login-btn').addEventListener('click', function() {

@@ -45,6 +45,7 @@
             }
         }
     </style>
+    <script src="app-config.js"></script>
 </head>
 <body class="bg-gray-100 min-h-screen">
     <div class="flex h-screen overflow-hidden">
@@ -264,12 +265,59 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">行业化 CRM 配置</h3>
+                    <p class="text-sm text-gray-600 mb-4">配置后将自动同步到“客户管理”页面的行业筛选和新增客户表单。</p>
+
+                    <form id="industry-config-form">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">行业方向</label>
+                                <input id="industry-label" type="text" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="例如：医疗服务 / 教育培训 / 本地生活服务">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">快速模板</label>
+                                <select id="industry-template" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                                    <option value="custom">自定义</option>
+                                    <option value="local-service">本地生活服务</option>
+                                    <option value="medical">医疗服务</option>
+                                    <option value="education">教育培训</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">行业分类（逗号分隔）</label>
+                                <input id="industry-items" type="text" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="例如：餐厅,美甲,按摩,美容,超市,其他">
+                            </div>
+                        </div>
+
+                        <div class="mt-6 flex justify-end">
+                            <button type="submit" class="bg-primary hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-all-300">
+                                保存行业配置
+                            </button>
+                            <button type="button" id="reset-all-data-btn" class="ml-3 bg-white border border-gray-300 text-gray-700 font-medium py-2 px-4 rounded-md transition-all-300">
+                                按行业模板重置全系统数据
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </main>
         </div>
     </div>
 
     <script>
-        // 检查登录状态
+
+        
+        function loadIndustryConfig() {
+            return CMSConfig.getActiveProfile();
+        }
+
+        function fillIndustryConfigForm(config) {
+            document.getElementById('industry-label').value = config.label || '';
+            document.getElementById('industry-items').value = (config.industries || []).map((item) => item.label).join(',');
+            document.getElementById('industry-template').value = config.key && CMSConfig.templates[config.key] ? config.key : 'custom';
+        }
+// 检查登录状态
         document.addEventListener('DOMContentLoaded', function() {
             const savedLogin = localStorage.getItem('userLogin') || sessionStorage.getItem('userLogin');
             
@@ -289,7 +337,8 @@
                 // 填充个人资料表单
                 document.getElementById('name').value = userData.name;
                 document.getElementById('username').value = userData.userId;
-                
+
+                fillIndustryConfigForm(loadIndustryConfig());
             } catch (e) {
                 console.error('登录信息解析错误', e);
                 window.location.href = 'index.html';
@@ -390,6 +439,41 @@
             sessionStorage.removeItem('userLogin');
             window.location.href = 'index.html';
         }
+
+
+        document.getElementById('industry-template').addEventListener('change', function() {
+            const template = CMSConfig.templates[this.value];
+            if (!template) return;
+            document.getElementById('industry-label').value = template.label;
+            document.getElementById('industry-items').value = template.industries.join(',');
+        });
+
+        document.getElementById('industry-config-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const label = document.getElementById('industry-label').value.trim() || '自定义行业';
+            const industries = document.getElementById('industry-items').value
+                .split(',')
+                .map((item) => item.trim())
+                .filter(Boolean);
+
+            if (!industries.length) {
+                alert('请至少填写一个行业分类。');
+                return;
+            }
+
+            const templateKey = document.getElementById('industry-template').value;
+            const config = {
+                key: templateKey === 'custom' ? 'custom' : templateKey,
+                label,
+                loginSubtitle: `适合${label}行业`,
+                industries: industries.map((item) => ({ value: CMSConfig.slug(item), label: item }))
+            };
+
+            CMSConfig.saveProfile(config);
+            CMSConfig.resetAllDemoData(config);
+            alert('行业配置已保存，并已按新行业重置客户/销售/交付演示数据。');
+        });
     </script>
 </body>
 </html>
