@@ -7,239 +7,261 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
     <script src="app-config.js"></script>
+    <script src="finance-service.js"></script>
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: { primary: '#1e40af', secondary: '#3b82f6' }
-                }
-            }
-        }
+        tailwind.config = { theme: { extend: { colors: { primary: '#1e40af' }}}}
     </script>
     <style type="text/tailwindcss">
         @layer utilities {
             .sidebar-active { @apply bg-blue-50 text-primary border-r-4 border-primary; }
             .status-badge { @apply px-2 py-1 text-xs font-semibold rounded-full; }
-            .status-paid { @apply bg-green-100 text-green-800; }
-            .status-partial { @apply bg-yellow-100 text-yellow-800; }
-            .status-unpaid { @apply bg-blue-100 text-blue-800; }
-            .status-overdue { @apply bg-red-100 text-red-800; }
+            .tab-active { @apply bg-primary text-white; }
         }
     </style>
 </head>
 <body class="bg-gray-100 font-sans">
-    <div class="min-h-screen flex">
-        <aside id="sidebar" class="w-64 bg-white shadow-md z-20 md:block hidden">
-            <div class="p-4 border-b">
-                <div class="flex items-center">
-                    <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white text-xl"><i class="fa fa-users"></i></div>
-                    <h1 class="ml-3 text-xl font-bold text-gray-800">客户管理系统</h1>
+<div class="min-h-screen flex">
+    <aside id="sidebar" class="w-64 bg-white shadow-md z-20 md:block hidden">
+        <div class="p-4 border-b"><div class="flex items-center"><div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white"><i class="fa fa-users"></i></div><h1 class="ml-3 text-xl font-bold text-gray-800">客户管理系统</h1></div></div>
+        <nav class="mt-4">
+            <a href="dashboard.html" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100"><i class="fa fa-tachometer w-5"></i><span class="ml-3">仪表盘</span></a>
+            <a href="customers.html" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100"><i class="fa fa-address-book w-5"></i><span class="ml-3">客户管理</span></a>
+            <a href="sales.html" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100"><i class="fa fa-line-chart w-5"></i><span class="ml-3">销售管理</span></a>
+            <a href="delivery.html" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100"><i class="fa fa-truck w-5"></i><span class="ml-3">交付管理</span></a>
+            <a href="finance.html" class="flex items-center px-4 py-3 text-gray-700 sidebar-active"><i class="fa fa-money w-5"></i><span class="ml-3">财务管理</span></a>
+            <a href="settings.html" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100"><i class="fa fa-cog w-5"></i><span class="ml-3">系统设置</span></a>
+        </nav>
+    </aside>
+
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <header class="bg-white shadow-sm z-10">
+            <div class="flex items-center justify-between p-4">
+                <div class="flex items-center"><button id="sidebar-toggle" class="text-gray-500 md:hidden"><i class="fa fa-bars text-xl"></i></button><div class="ml-2"><h2 class="text-xl font-semibold text-gray-800">财务管理</h2><p id="finance-industry" class="text-xs text-gray-500"></p></div></div>
+                <div class="relative"><button id="user-menu-button" class="flex items-center text-gray-700"><div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center"><span id="user-initial">管</span></div><span class="ml-2 text-sm font-medium" id="user-name">管理员</span></button><div id="user-menu" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 hidden"><a href="#" id="user-menu-logout" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">退出登录</a></div></div>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-4 bg-gray-100">
+            <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-4 mb-4">
+                <div class="bg-white rounded-lg p-4 shadow-sm"><p class="text-xs text-gray-500">本月总收入(USD)</p><p id="kpi-income" class="text-xl font-bold">0</p></div>
+                <div class="bg-white rounded-lg p-4 shadow-sm"><p class="text-xs text-gray-500">本月总支出(USD)</p><p id="kpi-expense" class="text-xl font-bold">0</p></div>
+                <div class="bg-white rounded-lg p-4 shadow-sm"><p class="text-xs text-gray-500">本月净收入(USD)</p><p id="kpi-net" class="text-xl font-bold">0</p></div>
+                <div class="bg-white rounded-lg p-4 shadow-sm"><p class="text-xs text-gray-500">管理费收入</p><p id="kpi-mgmt" class="text-xl font-bold">0</p></div>
+                <div class="bg-white rounded-lg p-4 shadow-sm"><p class="text-xs text-gray-500">投流费收入</p><p id="kpi-ad" class="text-xl font-bold">0</p></div>
+                <div class="bg-white rounded-lg p-4 shadow-sm"><p class="text-xs text-gray-500">公司支出(RMB)</p><p id="kpi-company" class="text-xl font-bold">0</p></div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-4 mb-4">
+                <div class="flex flex-wrap gap-2" id="finance-tabs">
+                    <button data-tab="income" class="px-4 py-2 rounded-md border tab-active">收入管理</button>
+                    <button data-tab="customer_expense" class="px-4 py-2 rounded-md border">客户支出管理</button>
+                    <button data-tab="company_expense" class="px-4 py-2 rounded-md border">公司支出管理</button>
+                    <button data-tab="subscription" class="px-4 py-2 rounded-md border">套餐续费管理</button>
+                </div>
+
+                <div class="mt-4 flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
+                    <div class="flex flex-wrap gap-3">
+                        <input id="search-input" type="text" placeholder="搜索客户/编号" class="px-3 py-2 border border-gray-300 rounded-md w-64">
+                        <select id="currency-filter" class="px-3 py-2 border border-gray-300 rounded-md">
+                            <option value="">全部币种</option><option value="USD">USD</option><option value="RMB">RMB</option>
+                        </select>
+                    </div>
+                    <button id="add-btn" class="bg-primary text-white px-4 py-2 rounded-md"><i class="fa fa-plus mr-2"></i>新增记录</button>
                 </div>
             </div>
-            <nav class="mt-4">
-                <a href="dashboard.html" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100"><i class="fa fa-tachometer w-5"></i><span class="ml-3">仪表盘</span></a>
-                <a href="customers.html" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100"><i class="fa fa-address-book w-5"></i><span class="ml-3">客户管理</span></a>
-                <a href="sales.html" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100"><i class="fa fa-line-chart w-5"></i><span class="ml-3">销售管理</span></a>
-                <a href="delivery.html" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100"><i class="fa fa-truck w-5"></i><span class="ml-3">交付管理</span></a>
-                <a href="finance.html" class="flex items-center px-4 py-3 text-gray-700 sidebar-active"><i class="fa fa-money w-5"></i><span class="ml-3">财务管理</span></a>
-                <a href="settings.html" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100"><i class="fa fa-cog w-5"></i><span class="ml-3">系统设置</span></a>
-            </nav>
-        </aside>
 
-        <div class="flex-1 flex flex-col overflow-hidden">
-            <header class="bg-white shadow-sm z-10">
-                <div class="flex items-center justify-between p-4">
-                    <div class="flex items-center">
-                        <button id="sidebar-toggle" class="text-gray-500 focus:outline-none md:hidden"><i class="fa fa-bars text-xl"></i></button>
-                        <div class="ml-2"><h2 class="text-xl font-semibold text-gray-800">财务管理</h2><p id="finance-industry-label" class="text-xs text-gray-500"></p></div>
-                    </div>
-                    <div class="relative">
-                        <button id="user-menu-button" class="flex items-center text-gray-700 focus:outline-none">
-                            <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center"><span id="user-initial">管</span></div>
-                            <span class="ml-2 text-sm font-medium" id="user-name">管理员</span><i class="fa fa-chevron-down ml-1 text-xs"></i>
-                        </button>
-                        <div id="user-menu" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 hidden">
-                            <a href="#" id="user-menu-logout" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"><i class="fa fa-sign-out mr-2"></i>退出登录</a>
-                        </div>
+            <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50"><tr id="table-head-row"></tr></thead>
+                        <tbody id="table-body" class="bg-white divide-y divide-gray-200"></tbody>
+                    </table>
+                </div>
+                <div class="p-4 border-t flex items-center justify-between text-sm">
+                    <span id="page-info" class="text-gray-500">第 1 页</span>
+                    <div class="space-x-2">
+                        <button id="prev-page" class="px-3 py-1 border rounded">上一页</button>
+                        <button id="next-page" class="px-3 py-1 border rounded">下一页</button>
                     </div>
                 </div>
-            </header>
-
-            <main class="flex-1 overflow-y-auto p-4 bg-gray-100">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                    <div class="bg-white rounded-lg shadow-sm p-4"><p class="text-sm text-gray-500">应收总额</p><p id="total-amount" class="text-2xl font-bold text-gray-800 mt-1">$0</p></div>
-                    <div class="bg-white rounded-lg shadow-sm p-4"><p class="text-sm text-gray-500">已收金额</p><p id="received-amount" class="text-2xl font-bold text-green-700 mt-1">$0</p></div>
-                    <div class="bg-white rounded-lg shadow-sm p-4"><p class="text-sm text-gray-500">未收余额</p><p id="pending-amount" class="text-2xl font-bold text-orange-700 mt-1">$0</p></div>
-                    <div class="bg-white rounded-lg shadow-sm p-4"><p class="text-sm text-gray-500">逾期笔数</p><p id="overdue-count" class="text-2xl font-bold text-red-700 mt-1">0</p></div>
-                </div>
-
-                <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
-                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                        <div class="flex items-center gap-3">
-                            <input id="search-input" type="text" placeholder="搜索客户 / 账单编号..." class="w-full md:w-80 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
-                            <select id="status-filter" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
-                                <option value="">全部状态</option>
-                                <option value="paid">已付款</option>
-                                <option value="partial">部分付款</option>
-                                <option value="unpaid">未付款</option>
-                                <option value="overdue">已逾期</option>
-                            </select>
-                        </div>
-                        <button id="add-record-btn" class="bg-primary hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md"><i class="fa fa-plus mr-2"></i>新增账单</button>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">账单编号</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">客户</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">费用类型</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">应收金额</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">已收金额</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">截止日期</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
-                                </tr>
-                            </thead>
-                            <tbody id="finance-table-body" class="bg-white divide-y divide-gray-200"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </main>
-        </div>
-    </div>
-
-    <div id="finance-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl p-6">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold">新增财务账单</h3>
-                <button id="close-modal-btn" class="text-gray-500"><i class="fa fa-times"></i></button>
             </div>
-            <form id="finance-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input id="new-customer" required placeholder="客户名称" class="border border-gray-300 rounded-md px-3 py-2">
-                <input id="new-invoice-type" required placeholder="费用类型（服务费/项目费等）" class="border border-gray-300 rounded-md px-3 py-2">
-                <input id="new-amount" required type="number" min="0" placeholder="应收金额" class="border border-gray-300 rounded-md px-3 py-2">
-                <input id="new-received" required type="number" min="0" placeholder="已收金额" class="border border-gray-300 rounded-md px-3 py-2">
-                <input id="new-due-date" required type="date" class="border border-gray-300 rounded-md px-3 py-2">
-                <select id="new-method" class="border border-gray-300 rounded-md px-3 py-2"><option>银行转账</option><option>信用卡</option><option>支票</option><option>现金</option></select>
-                <div class="md:col-span-2 flex justify-end gap-2 mt-2">
-                    <button type="button" id="cancel-modal-btn" class="px-4 py-2 border border-gray-300 rounded-md">取消</button>
-                    <button type="submit" class="px-4 py-2 bg-primary text-white rounded-md">保存</button>
-                </div>
-            </form>
-        </div>
+        </main>
     </div>
+</div>
 
-    <script>
-        let financeRecords = [];
-        const statusMap = { paid: '已付款', partial: '部分付款', unpaid: '未付款', overdue: '已逾期' };
+<div id="record-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 hidden">
+  <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl p-6">
+    <div class="flex items-center justify-between mb-4"><h3 id="modal-title" class="text-lg font-semibold">新增记录</h3><button id="close-modal-btn"><i class="fa fa-times"></i></button></div>
+    <form id="record-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <input id="f-customer" placeholder="客户名称" class="border border-gray-300 rounded px-3 py-2" required>
+      <input id="f-type" placeholder="类型（如管理费收入）" class="border border-gray-300 rounded px-3 py-2" required>
+      <input id="f-amount" type="number" min="0" placeholder="金额" class="border border-gray-300 rounded px-3 py-2" required>
+      <select id="f-currency" class="border border-gray-300 rounded px-3 py-2"><option>USD</option><option>RMB</option></select>
+      <input id="f-date" type="date" class="border border-gray-300 rounded px-3 py-2" required>
+      <input id="f-extra" placeholder="套餐/备注" class="border border-gray-300 rounded px-3 py-2">
+      <div class="md:col-span-2 flex justify-end gap-2"><button type="button" id="cancel-modal-btn" class="px-4 py-2 border rounded">取消</button><button class="px-4 py-2 bg-primary text-white rounded">保存</button></div>
+    </form>
+  </div>
+</div>
 
-        function getStatus(amount, received, dueDate) {
-            if (received >= amount) return 'paid';
-            const now = new Date();
-            const due = new Date(dueDate + 'T23:59:59');
-            if (received > 0) return now > due ? 'overdue' : 'partial';
-            return now > due ? 'overdue' : 'unpaid';
+<script>
+    const state = { tab: 'income', page: 1, pageSize: 8 };
+
+    const columns = {
+      income: ['收款编号','客户','收入类型','金额','币种','收款日期','操作'],
+      customer_expense: ['支出编号','客户','支出类型','金额','币种','支出日期','操作'],
+      company_expense: ['公司支出编号','分类','金额','币种','支出日期','操作'],
+      subscription: ['客户','套餐','价格','币种','周期','到期时间','续费状态','操作']
+    };
+
+    function fmt(n) { return Number(n || 0).toLocaleString(); }
+    function openModal() { document.getElementById('record-modal').classList.remove('hidden'); }
+    function closeModal() { document.getElementById('record-modal').classList.add('hidden'); }
+
+    function refreshKpis() {
+      const s = FinanceService.summary();
+      document.getElementById('kpi-income').textContent = fmt(s.totalIncome);
+      document.getElementById('kpi-expense').textContent = fmt(s.totalExpense);
+      document.getElementById('kpi-net').textContent = fmt(s.netIncome);
+      document.getElementById('kpi-mgmt').textContent = fmt(s.managementFeeIncome);
+      document.getElementById('kpi-ad').textContent = fmt(s.adFeeIncome);
+      document.getElementById('kpi-company').textContent = fmt(s.companyExpense);
+    }
+
+    function renderTable() {
+      const search = document.getElementById('search-input').value.trim().toLowerCase();
+      const currency = document.getElementById('currency-filter').value;
+      const allRows = FinanceService.list(state.tab).filter((x) => {
+        const hitSearch = !search || JSON.stringify(x).toLowerCase().includes(search);
+        const hitCurrency = !currency || (x.currency === currency);
+        return hitSearch && hitCurrency;
+      });
+
+      const totalPages = Math.max(1, Math.ceil(allRows.length / state.pageSize));
+      if (state.page > totalPages) state.page = totalPages;
+      const rows = allRows.slice((state.page - 1) * state.pageSize, state.page * state.pageSize);
+
+      const head = document.getElementById('table-head-row');
+      head.innerHTML = columns[state.tab].map((x) => `<th class='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase'>${x}</th>`).join('');
+
+      const body = document.getElementById('table-body');
+      body.innerHTML = '';
+      rows.forEach((x, i) => {
+        const tr = document.createElement('tr');
+        if (state.tab === 'income') {
+          tr.innerHTML = `<td class='px-6 py-4 text-sm'>${x.payment_code}</td><td class='px-6 py-4 text-sm font-medium'>${x.customer_name}</td><td class='px-6 py-4 text-sm'>${x.income_type}</td><td class='px-6 py-4 text-sm'>${fmt(x.amount)}</td><td class='px-6 py-4 text-sm'>${x.currency}</td><td class='px-6 py-4 text-sm'>${x.payment_date}</td><td class='px-6 py-4 text-sm'><button class='text-red-600' data-delete-id='${x.id}' data-delete-type='income'>删除</button></td>`;
+        } else if (state.tab === 'customer_expense') {
+          tr.innerHTML = `<td class='px-6 py-4 text-sm'>${x.expense_code}</td><td class='px-6 py-4 text-sm font-medium'>${x.customer_name}</td><td class='px-6 py-4 text-sm'>${x.expense_type}</td><td class='px-6 py-4 text-sm'>${fmt(x.amount)}</td><td class='px-6 py-4 text-sm'>${x.currency}</td><td class='px-6 py-4 text-sm'>${x.expense_date}</td><td class='px-6 py-4 text-sm'><span class='text-gray-400'>-</span></td>`;
+        } else if (state.tab === 'company_expense') {
+          tr.innerHTML = `<td class='px-6 py-4 text-sm'>${x.company_expense_code}</td><td class='px-6 py-4 text-sm font-medium'>${x.category_name}</td><td class='px-6 py-4 text-sm'>${fmt(x.amount)}</td><td class='px-6 py-4 text-sm'>${x.currency}</td><td class='px-6 py-4 text-sm'>${x.expense_date}</td><td class='px-6 py-4 text-sm'><span class='text-gray-400'>-</span></td>`;
+        } else {
+          tr.innerHTML = `<td class='px-6 py-4 text-sm font-medium'>${x.customer_name}</td><td class='px-6 py-4 text-sm'>${x.package_name}</td><td class='px-6 py-4 text-sm'>${fmt(x.package_price)}</td><td class='px-6 py-4 text-sm'>${x.currency}</td><td class='px-6 py-4 text-sm'>${x.payment_cycle}</td><td class='px-6 py-4 text-sm'>${x.end_at}</td><td class='px-6 py-4 text-sm'>${x.renew_status}</td><td class='px-6 py-4 text-sm'><span class='text-gray-400'>-</span></td>`;
         }
+        body.appendChild(tr);
+      });
 
-        function loadFinance() {
-            const keyword = document.getElementById('search-input').value.trim().toLowerCase();
-            const status = document.getElementById('status-filter').value;
+      document.getElementById('page-info').textContent = `第 ${state.page} / ${totalPages} 页，共 ${allRows.length} 条`;
+      refreshKpis();
+    }
 
-            financeRecords.forEach((x) => { x.status = getStatus(Number(x.amount), Number(x.received), x.dueDate); });
-            const rows = financeRecords.filter((item) => {
-                const hitKeyword = !keyword || item.customer.toLowerCase().includes(keyword) || item.id.toLowerCase().includes(keyword);
-                const hitStatus = !status || item.status === status;
-                return hitKeyword && hitStatus;
-            });
+    function bindBaseEvents() {
+      document.getElementById('search-input').addEventListener('input', () => { state.page = 1; renderTable(); });
+      document.getElementById('currency-filter').addEventListener('change', () => { state.page = 1; renderTable(); });
+      document.getElementById('prev-page').addEventListener('click', () => { if (state.page > 1) { state.page--; renderTable(); }});
+      document.getElementById('next-page').addEventListener('click', () => { state.page++; renderTable(); });
+      document.getElementById('add-btn').addEventListener('click', openModal);
+      document.getElementById('close-modal-btn').addEventListener('click', closeModal);
+      document.getElementById('cancel-modal-btn').addEventListener('click', closeModal);
+      document.getElementById('record-modal').addEventListener('click', (e) => { if (e.target.id === 'record-modal') closeModal(); });
 
-            const tbody = document.getElementById('finance-table-body');
-            tbody.innerHTML = '';
-            rows.forEach((item) => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td class="px-6 py-4 text-sm text-gray-900">${item.id}</td>
-                    <td class="px-6 py-4 text-sm text-gray-900 font-medium">${item.customer}</td>
-                    <td class="px-6 py-4 text-sm text-gray-900">${item.invoiceType}</td>
-                    <td class="px-6 py-4 text-sm text-gray-900">$${Number(item.amount).toLocaleString()}</td>
-                    <td class="px-6 py-4 text-sm text-gray-900">$${Number(item.received).toLocaleString()}</td>
-                    <td class="px-6 py-4 text-sm text-gray-500">${item.dueDate}</td>
-                    <td class="px-6 py-4"><span class="status-badge status-${item.status}">${statusMap[item.status]}</span></td>
-                `;
-                tbody.appendChild(tr);
-            });
+      document.getElementById('finance-tabs').addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-tab]');
+        if (!btn) return;
+        state.tab = btn.dataset.tab;
+        state.page = 1;
+        document.querySelectorAll('#finance-tabs button').forEach((x) => x.classList.remove('tab-active'));
+        btn.classList.add('tab-active');
+        renderTable();
+      });
 
-            const total = financeRecords.reduce((sum, x) => sum + Number(x.amount), 0);
-            const received = financeRecords.reduce((sum, x) => sum + Number(x.received), 0);
-            const overdue = financeRecords.filter((x) => x.status === 'overdue').length;
-            document.getElementById('total-amount').textContent = `$${total.toLocaleString()}`;
-            document.getElementById('received-amount').textContent = `$${received.toLocaleString()}`;
-            document.getElementById('pending-amount').textContent = `$${(total - received).toLocaleString()}`;
-            document.getElementById('overdue-count').textContent = overdue;
+      document.getElementById('record-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const operator = document.getElementById('user-name').textContent || '系统';
+        if (state.tab === 'income') {
+          FinanceService.add('income', {
+            customer_name: document.getElementById('f-customer').value.trim(),
+            income_type: document.getElementById('f-type').value.trim(),
+            amount: document.getElementById('f-amount').value,
+            currency: document.getElementById('f-currency').value,
+            payment_date: document.getElementById('f-date').value,
+            package_name: document.getElementById('f-extra').value.trim()
+          }, operator);
+        } else if (state.tab === 'customer_expense') {
+          FinanceService.add('customer_expense', {
+            customer_name: document.getElementById('f-customer').value.trim(),
+            expense_type: document.getElementById('f-type').value.trim(),
+            amount: document.getElementById('f-amount').value,
+            currency: document.getElementById('f-currency').value,
+            expense_date: document.getElementById('f-date').value,
+            remark: document.getElementById('f-extra').value.trim()
+          }, operator);
+        } else if (state.tab === 'company_expense') {
+          FinanceService.add('company_expense', {
+            category_name: document.getElementById('f-type').value.trim(),
+            amount: document.getElementById('f-amount').value,
+            expense_date: document.getElementById('f-date').value,
+            payment_method: '银行转账',
+            remark: document.getElementById('f-extra').value.trim()
+          }, operator);
+        } else {
+          FinanceService.add('subscription', {
+            customer_name: document.getElementById('f-customer').value.trim(),
+            package_name: document.getElementById('f-extra').value.trim() || '标准套餐',
+            package_price: document.getElementById('f-amount').value,
+            currency: document.getElementById('f-currency').value,
+            payment_cycle: '月付',
+            start_at: document.getElementById('f-date').value,
+            end_at: document.getElementById('f-date').value,
+            renew_status: document.getElementById('f-type').value.trim() || '正常'
+          }, operator);
         }
+        closeModal();
+        e.target.reset();
+        renderTable();
+      });
 
-        function openModal(){ document.getElementById('finance-modal').classList.remove('hidden'); }
-        function closeModal(){ document.getElementById('finance-modal').classList.add('hidden'); }
+      document.getElementById('sidebar-toggle').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('hidden'));
+      document.getElementById('user-menu-button').addEventListener('click', () => document.getElementById('user-menu').classList.toggle('hidden'));
+      document.addEventListener('click', (e) => {
+        const btn = document.getElementById('user-menu-button');
+        const menu = document.getElementById('user-menu');
+        if (btn && menu && !btn.contains(e.target) && !menu.contains(e.target)) menu.classList.add('hidden');
+      });
+      document.getElementById('user-menu-logout').addEventListener('click', (e) => {
+        e.preventDefault();
+        localStorage.removeItem('userLogin');
+        sessionStorage.removeItem('userLogin');
+        window.location.href = 'index.html';
+      });
+    }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            const savedLogin = localStorage.getItem('userLogin') || sessionStorage.getItem('userLogin');
-            if (!savedLogin) { window.location.href = 'index.html'; return; }
-            try {
-                const userData = JSON.parse(savedLogin);
-                document.getElementById('user-name').textContent = userData.name;
-                document.getElementById('user-initial').textContent = userData.name.charAt(0);
-                CMSConfig.ensureDemoData();
-                const profile = CMSConfig.getActiveProfile();
-                document.getElementById('finance-industry-label').textContent = `${profile.label} 行业财务看板`;
-                financeRecords = CMSConfig.getFinanceRecords();
-                loadFinance();
-            } catch (e) { window.location.href = 'index.html'; }
-        });
-
-        document.getElementById('sidebar-toggle').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('hidden'));
-        document.getElementById('user-menu-button').addEventListener('click', () => document.getElementById('user-menu').classList.toggle('hidden'));
-        document.addEventListener('click', function(event){
-            const menu=document.getElementById('user-menu'); const btn=document.getElementById('user-menu-button');
-            if(!btn.contains(event.target)&&!menu.contains(event.target)) menu.classList.add('hidden');
-        });
-
-        document.getElementById('search-input').addEventListener('input', loadFinance);
-        document.getElementById('status-filter').addEventListener('change', loadFinance);
-        document.getElementById('add-record-btn').addEventListener('click', openModal);
-        document.getElementById('close-modal-btn').addEventListener('click', closeModal);
-        document.getElementById('cancel-modal-btn').addEventListener('click', closeModal);
-        document.getElementById('finance-modal').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
-
-        document.getElementById('finance-form').addEventListener('submit', function(event){
-            event.preventDefault();
-            const amount = Number(document.getElementById('new-amount').value);
-            const received = Number(document.getElementById('new-received').value);
-            const dueDate = document.getElementById('new-due-date').value;
-            financeRecords.unshift({
-                id: `F2026${String(financeRecords.length + 1).padStart(3,'0')}`,
-                customer: document.getElementById('new-customer').value.trim(),
-                invoiceType: document.getElementById('new-invoice-type').value.trim(),
-                amount,
-                received,
-                dueDate,
-                method: document.getElementById('new-method').value,
-                status: getStatus(amount, received, dueDate)
-            });
-            CMSConfig.setFinanceRecords(financeRecords);
-            closeModal();
-            this.reset();
-            loadFinance();
-            alert('财务账单已创建。');
-        });
-
-        document.getElementById('user-menu-logout').addEventListener('click', function(e){
-            e.preventDefault();
-            localStorage.removeItem('userLogin');
-            sessionStorage.removeItem('userLogin');
-            window.location.href = 'index.html';
-        });
-    </script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const login = localStorage.getItem('userLogin') || sessionStorage.getItem('userLogin');
+      if (!login) { window.location.href = 'index.html'; return; }
+      try {
+        const user = JSON.parse(login);
+        document.getElementById('user-name').textContent = user.name || '用户';
+        document.getElementById('user-initial').textContent = (user.name || '用').charAt(0);
+        const profile = CMSConfig.getActiveProfile();
+        document.getElementById('finance-industry').textContent = `${profile.label} - 财务总览 / 收入 / 支出 / 续费`;
+        CMSConfig.ensureDemoData();
+        FinanceService.seedIfNeeded();
+        bindBaseEvents();
+        renderTable();
+      } catch (_) {
+        window.location.href = 'index.html';
+      }
+    });
+</script>
 </body>
 </html>
