@@ -640,7 +640,7 @@
                 document.getElementById('user-initial').textContent = userData.name.charAt(0);
                 
                 CMSConfig.ensureDemoData();
-                mockCustomers = CMSConfig.getCustomers();
+                mockCustomers = normalizeCustomers(CMSConfig.getCustomers());
                 // 加载行业配置和客户数据
                 renderIndustryOptions();
                 loadCustomers();
@@ -684,16 +684,33 @@
             });
         }
 
-        let mockCustomers = CMSConfig.getCustomers();
+        let mockCustomers = normalizeCustomers(CMSConfig.getCustomers());
         if (!mockCustomers.length) {
             CMSConfig.ensureDemoData();
-            mockCustomers = CMSConfig.getCustomers();
+            mockCustomers = normalizeCustomers(CMSConfig.getCustomers());
         }
         
+
+        function normalizeCustomers(rows) {
+            return (rows || []).map((row, index) => ({
+                id: String(row.id || index + 1),
+                customerNumber: row.customerNumber || row.customerNo || `C2026${String(index + 1).padStart(4, '0')}`,
+                businessName: row.businessName || row.customerName || row.name || '',
+                contactPerson: row.contactPerson || row.contact || row.owner || '',
+                phone: row.phone || row.mobile || row.tel || '',
+                industry: row.industry || row.industryType || 'other',
+                salesPerson: row.salesPerson || row.owner || '未分配',
+                level: row.level || 'normal',
+                status: row.status || 'following',
+                createdAt: row.createdAt || row.createTime || new Date().toISOString().slice(0, 10)
+            }));
+        }
+
         // 加载客户数据
         function loadCustomers() {
             const tableBody = document.getElementById('customer-table-body');
             tableBody.innerHTML = '';
+            mockCustomers = normalizeCustomers(mockCustomers);
             
             const industryMap = getIndustryMap(getIndustryConfig());
 
@@ -873,7 +890,10 @@
 
         function openCustomerDetailModal(customerId, mode) {
             const customer = mockCustomers.find((item) => item.id === customerId);
-            if (!customer) return;
+            if (!customer) {
+                alert('未找到客户数据，请刷新后重试。');
+                return;
+            }
             const config = getIndustryConfig();
             const select = document.getElementById('detail-industry');
             select.innerHTML = '';
