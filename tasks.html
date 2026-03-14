@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>客户管理系统 - 任务协作</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1e40af',
+                        secondary: '#3b82f6',
+                        success: '#10b981',
+                        warning: '#f59e0b',
+                        danger: '#ef4444'
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .sidebar-active { @apply bg-blue-50 text-primary border-r-4 border-primary; }
+            .transition-all-300 { transition: all 0.3s ease; }
+            .status-badge { @apply px-2 py-1 text-xs font-semibold rounded-full; }
+            .status-todo { @apply bg-gray-100 text-gray-700; }
+            .status-progress { @apply bg-blue-100 text-blue-800; }
+            .status-review { @apply bg-purple-100 text-purple-800; }
+            .status-done { @apply bg-green-100 text-green-800; }
+            .priority-high { @apply bg-red-100 text-red-800; }
+            .priority-medium { @apply bg-orange-100 text-orange-800; }
+            .priority-low { @apply bg-gray-100 text-gray-700; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+    <div class="min-h-screen flex">
+        <aside id="sidebar" class="w-64 bg-white shadow-md z-20 md:block hidden">
+            <div class="p-4 border-b">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white text-xl">
+                        <i class="fa fa-users"></i>
+                    </div>
+                    <h1 class="ml-3 text-xl font-bold text-gray-800">客户管理系统</h1>
+                </div>
+            </div>
+            <nav class="mt-4">
+                <a href="dashboard.html" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 transition-all-300"><i class="fa fa-tachometer w-5"></i><span class="ml-3">仪表盘</span></a>
+                <a href="customers.html" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 transition-all-300"><i class="fa fa-address-book w-5"></i><span class="ml-3">客户管理</span></a>
+                <a href="sales.html" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 transition-all-300"><i class="fa fa-line-chart w-5"></i><span class="ml-3">销售管理</span></a>
+                <a href="delivery.html" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 transition-all-300"><i class="fa fa-truck w-5"></i><span class="ml-3">交付管理</span></a>
+                <a href="renewal.html" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 transition-all-300"><i class="fa fa-refresh w-5"></i><span class="ml-3">续费管理</span></a>
+                <a href="finance.html" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 transition-all-300"><i class="fa fa-money w-5"></i><span class="ml-3">财务管理</span></a>
+                <a href="tasks.html" class="flex items-center px-4 py-3 text-gray-700 sidebar-active"><i class="fa fa-calendar-check-o w-5"></i><span class="ml-3">任务协作</span></a>
+                <a href="reports.html" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 transition-all-300"><i class="fa fa-bar-chart w-5"></i><span class="ml-3">报表中心</span></a>
+                <a href="settings.html" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 transition-all-300"><i class="fa fa-cog w-5"></i><span class="ml-3">系统设置</span></a>
+            </nav>
+        </aside>
+
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <header class="bg-white shadow-sm z-10">
+                <div class="flex items-center justify-between p-4">
+                    <div class="flex items-center">
+                        <button id="sidebar-toggle" class="text-gray-500 focus:outline-none md:hidden"><i class="fa fa-bars text-xl"></i></button>
+                        <h2 class="ml-2 text-xl font-semibold text-gray-800">任务协作</h2>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="relative">
+                            <button id="user-menu-button" class="flex items-center text-gray-700 focus:outline-none">
+                                <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center"><span id="user-initial">管</span></div>
+                                <span class="ml-2 text-sm font-medium" id="user-name">管理员</span>
+                                <i class="fa fa-chevron-down ml-1 text-xs"></i>
+                            </button>
+                            <div id="user-menu" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 hidden">
+                                <a href="#" id="user-menu-logout" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"><i class="fa fa-sign-out mr-2"></i> 退出登录</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <main class="flex-1 overflow-y-auto p-4 bg-gray-100">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-white rounded-lg shadow-sm p-4"><p class="text-sm text-gray-500">任务总数</p><p id="task-total" class="text-2xl font-bold text-gray-800 mt-1">0</p></div>
+                    <div class="bg-white rounded-lg shadow-sm p-4"><p class="text-sm text-gray-500">进行中</p><p id="task-progress" class="text-2xl font-bold text-blue-700 mt-1">0</p></div>
+                    <div class="bg-white rounded-lg shadow-sm p-4"><p class="text-sm text-gray-500">待验收</p><p id="task-review" class="text-2xl font-bold text-purple-700 mt-1">0</p></div>
+                    <div class="bg-white rounded-lg shadow-sm p-4"><p class="text-sm text-gray-500">已完成</p><p id="task-done" class="text-2xl font-bold text-green-700 mt-1">0</p></div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                        <div class="flex flex-wrap items-center gap-3">
+                            <input id="search-input" type="text" placeholder="搜索任务名称 / 客户 / 负责人..." class="w-full md:w-72 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+                            <select id="status-filter" class="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+                                <option value="">全部状态</option>
+                                <option value="todo">待开始</option>
+                                <option value="progress">进行中</option>
+                                <option value="review">待验收</option>
+                                <option value="done">已完成</option>
+                            </select>
+                            <select id="priority-filter" class="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+                                <option value="">全部优先级</option>
+                                <option value="high">高</option>
+                                <option value="medium">中</option>
+                                <option value="low">低</option>
+                            </select>
+                        </div>
+                        <button id="add-task-btn" class="inline-flex items-center px-4 py-2 bg-primary text-white rounded-md hover:bg-blue-800 transition-all-300">
+                            <i class="fa fa-plus mr-2"></i> 新建任务
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">任务</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">客户</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">负责人</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">优先级</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">截止日期</th>
+                                </tr>
+                            </thead>
+                            <tbody id="task-table-body" class="bg-white divide-y divide-gray-200"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <div id="task-modal" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center z-30">
+        <div class="bg-white rounded-lg shadow-lg w-full max-w-lg p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">新建协作任务</h3>
+                <button id="close-modal-btn" class="text-gray-500 hover:text-gray-700"><i class="fa fa-times"></i></button>
+            </div>
+            <form id="task-form" class="space-y-4">
+                <input id="task-name" type="text" required placeholder="任务名称" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+                <input id="task-customer" type="text" required placeholder="关联客户" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+                <input id="task-owner" type="text" required placeholder="负责人" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <select id="task-priority" required class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+                        <option value="">选择优先级</option>
+                        <option value="high">高</option>
+                        <option value="medium">中</option>
+                        <option value="low">低</option>
+                    </select>
+                    <input id="task-deadline" type="date" required class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+                </div>
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" id="cancel-modal-btn" class="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-50">取消</button>
+                    <button type="submit" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-blue-800">创建任务</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const mockTasks = [
+            { title: '完成新客户合同确认', customer: '金龙餐厅', owner: '张三', priority: 'high', status: 'progress', dueDate: '2026-03-20' },
+            { title: '审核交付设计稿', customer: '米兰西餐厅', owner: '李四', priority: 'medium', status: 'review', dueDate: '2026-03-18' },
+            { title: '更新续费提醒清单', customer: '东方明珠', owner: '王五', priority: 'low', status: 'todo', dueDate: '2026-03-25' },
+            { title: '整理月度回款数据', customer: '亚洲超市', owner: '赵六', priority: 'high', status: 'done', dueDate: '2026-03-12' }
+        ];
+
+        const statusMap = { todo: '待开始', progress: '进行中', review: '待验收', done: '已完成' };
+        const priorityMap = { high: '高', medium: '中', low: '低' };
+
+        function loadTasks() {
+            const keyword = document.getElementById('search-input').value.trim().toLowerCase();
+            const status = document.getElementById('status-filter').value;
+            const priority = document.getElementById('priority-filter').value;
+
+            const rows = mockTasks.filter((item) => {
+                const hitKeyword = !keyword || item.title.toLowerCase().includes(keyword) || item.customer.toLowerCase().includes(keyword) || item.owner.toLowerCase().includes(keyword);
+                const hitStatus = !status || item.status === status;
+                const hitPriority = !priority || item.priority === priority;
+                return hitKeyword && hitStatus && hitPriority;
+            });
+
+            const tableBody = document.getElementById('task-table-body');
+            tableBody.innerHTML = '';
+
+            if (!rows.length) {
+                tableBody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-sm text-gray-500">暂无符合条件的任务</td></tr>';
+            }
+
+            rows.forEach((item) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-6 py-4 text-sm text-gray-900 font-medium">${item.title}</td>
+                    <td class="px-6 py-4 text-sm text-gray-900">${item.customer}</td>
+                    <td class="px-6 py-4 text-sm text-gray-900">${item.owner}</td>
+                    <td class="px-6 py-4"><span class="status-badge priority-${item.priority}">${priorityMap[item.priority]}</span></td>
+                    <td class="px-6 py-4"><span class="status-badge status-${item.status}">${statusMap[item.status]}</span></td>
+                    <td class="px-6 py-4 text-sm text-gray-500">${item.dueDate}</td>
+                `;
+                tableBody.appendChild(tr);
+            });
+
+            document.getElementById('task-total').textContent = mockTasks.length;
+            document.getElementById('task-progress').textContent = mockTasks.filter((x) => x.status === 'progress').length;
+            document.getElementById('task-review').textContent = mockTasks.filter((x) => x.status === 'review').length;
+            document.getElementById('task-done').textContent = mockTasks.filter((x) => x.status === 'done').length;
+        }
+
+        function openModal() {
+            document.getElementById('task-modal').classList.remove('hidden');
+            document.getElementById('task-modal').classList.add('flex');
+        }
+
+        function closeModal() {
+            document.getElementById('task-modal').classList.add('hidden');
+            document.getElementById('task-modal').classList.remove('flex');
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedLogin = localStorage.getItem('userLogin') || sessionStorage.getItem('userLogin');
+            if (!savedLogin) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            try {
+                const userData = JSON.parse(savedLogin);
+                document.getElementById('user-name').textContent = userData.name;
+                document.getElementById('user-initial').textContent = userData.name.charAt(0);
+                loadTasks();
+            } catch (e) {
+                window.location.href = 'index.html';
+            }
+        });
+
+        document.getElementById('sidebar-toggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('hidden');
+        });
+
+        document.getElementById('user-menu-button').addEventListener('click', function() {
+            document.getElementById('user-menu').classList.toggle('hidden');
+        });
+
+        document.addEventListener('click', function(event) {
+            const userMenu = document.getElementById('user-menu');
+            const userMenuButton = document.getElementById('user-menu-button');
+            if (!userMenuButton.contains(event.target) && !userMenu.contains(event.target)) {
+                userMenu.classList.add('hidden');
+            }
+        });
+
+        document.getElementById('search-input').addEventListener('input', loadTasks);
+        document.getElementById('status-filter').addEventListener('change', loadTasks);
+        document.getElementById('priority-filter').addEventListener('change', loadTasks);
+        document.getElementById('add-task-btn').addEventListener('click', openModal);
+        document.getElementById('close-modal-btn').addEventListener('click', closeModal);
+        document.getElementById('cancel-modal-btn').addEventListener('click', closeModal);
+        document.getElementById('task-modal').addEventListener('click', function(event) {
+            if (event.target === this) closeModal();
+        });
+
+        document.getElementById('task-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            mockTasks.unshift({
+                title: document.getElementById('task-name').value.trim(),
+                customer: document.getElementById('task-customer').value.trim(),
+                owner: document.getElementById('task-owner').value.trim(),
+                priority: document.getElementById('task-priority').value,
+                status: 'todo',
+                dueDate: document.getElementById('task-deadline').value
+            });
+            this.reset();
+            closeModal();
+            loadTasks();
+            alert('任务已创建。');
+        });
+
+        document.getElementById('user-menu-logout').addEventListener('click', function(event) {
+            event.preventDefault();
+            localStorage.removeItem('userLogin');
+            sessionStorage.removeItem('userLogin');
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>
