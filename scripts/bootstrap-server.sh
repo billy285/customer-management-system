@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ "${EUID}" -ne 0 ]]; then
+  echo "请使用 root 运行：sudo bash scripts/bootstrap-server.sh"
+  exit 1
+fi
+
+if [[ ! -f /etc/os-release ]]; then
+  echo "无法识别系统：缺少 /etc/os-release"
+  exit 1
+fi
+
+# shellcheck disable=SC1091
+source /etc/os-release
+if [[ "${ID:-}" != "ubuntu" ]]; then
+  echo "当前脚本仅支持 Ubuntu，检测到: ${ID:-unknown}"
+  exit 1
+fi
+
+if [[ -z "${VERSION_CODENAME:-}" ]]; then
+  echo "无法识别 Ubuntu 版本代号（VERSION_CODENAME 为空）"
+  exit 1
+fi
+
+apt-get update
+apt-get install -y ca-certificates curl gnupg lsb-release
+
+install -m 0755 -d /etc/apt/keyrings
+if [[ ! -f /etc/apt/keyrings/docker.gpg ]]; then
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+  chmod a+r /etc/apt/keyrings/docker.gpg
+fi
+
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  ${VERSION_CODENAME} stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+apt-get update
+apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+systemctl enable docker
+systemctl start docker
+
+echo "Docker 安装完成："
+docker --version
+docker compose version
