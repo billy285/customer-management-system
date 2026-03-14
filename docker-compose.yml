@@ -1,0 +1,7 @@
+services:
+  cms-web:
+    image: ghcr.io/YOUR_GH_USERNAME/customer-management-system:latest
+    container_name: cms-web
+    restart: unless-stopped
+    ports:
+      - "80:80"
